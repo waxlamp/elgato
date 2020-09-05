@@ -3,7 +3,7 @@
 import sys
 
 
-def main():
+def main() -> int:
     """Run the elgato program."""
 
     print("hello elgato")
