@@ -1,7 +1,11 @@
+"""Main module for elgato package."""
+
 import sys
 
 
 def main():
+    """Run the elgato program."""
+
     print("hello elgato")
     return 0
 

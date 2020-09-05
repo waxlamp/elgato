@@ -1,3 +1,5 @@
+"""setup.py for elgato package."""
+
 from distutils.core import setup
 
 setup(
