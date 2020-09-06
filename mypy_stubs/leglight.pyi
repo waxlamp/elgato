@@ -1,6 +1,7 @@
 from typing import List
 
 class LegLight:
+    isOn: int
     def on(self) -> None: ...
     def off(self) -> None: ...
 

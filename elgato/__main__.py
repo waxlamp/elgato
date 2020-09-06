@@ -3,25 +3,39 @@
 import argparse
 import leglight
 import sys
+from typing import Optional
 
 
 def first_light() -> leglight.LegLight:
     """Return the first light found in the network."""
-    return leglight.discover(1)[0]
+    lights = []
+    timeout = 0
+    while not lights:
+        timeout += 0.5
+        lights = leglight.discover(timeout)
+    return lights[0]
 
 
-def turn_on() -> int:
+def turn_on(light: Optional[leglight.LegLight] = None) -> int:
     """Turn on the first light in the network."""
-    light = first_light()
+    if light is None:
+        light = first_light()
     light.on()
     return 0
 
 
-def turn_off() -> int:
+def turn_off(light: Optional[leglight.LegLight] = None) -> int:
     """Turn off the first light in the network."""
-    light = first_light()
+    if light is None:
+        light = first_light()
     light.off()
     return 0
+
+
+def toggle() -> int:
+    """Toggle the first light in the network."""
+    light = first_light()
+    return turn_on(light) if light.isOn == 0 else turn_off(light)
 
 
 def main() -> int:
@@ -42,13 +56,14 @@ def main() -> int:
     # Define a series of subcommand parsers.
     subparsers = parser.add_subparsers(help="subcommand help")
 
-    # The parser for turning on a light.
     parser_on = subparsers.add_parser("on", help="Turn a light on")
     parser_on.set_defaults(action=turn_on)
 
-    # The parser for turning off a light.
     parser_off = subparsers.add_parser("off", help="Turn a light off")
     parser_off.set_defaults(action=turn_off)
+
+    parser_toggle = subparsers.add_parser("toggle", help="Toggle a light")
+    parser_toggle.set_defaults(action=toggle)
 
     # Parse the command line arguments and dispatch to the correct subcommand.
     args = parser.parse_args(sys.argv[1:])
