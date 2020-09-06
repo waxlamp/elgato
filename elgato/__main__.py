@@ -38,6 +38,12 @@ def toggle() -> int:
     return turn_on(light) if light.isOn == 0 else turn_off(light)
 
 
+def set_color(color: int) -> int:
+    """Set the first light's color temperature."""
+    light = first_light()
+    return light.color(color)
+
+
 def main() -> int:
     """Run the elgato program."""
 
@@ -64,6 +70,19 @@ def main() -> int:
 
     parser_toggle = subparsers.add_parser("toggle", help="Toggle a light")
     parser_toggle.set_defaults(action=toggle)
+
+    parser_color = subparsers.add_parser(
+        "color", help="Set a light's color temperature"
+    )
+    parser_color.add_argument(
+        "color",
+        metavar="COLOR_TEMPERATURE",
+        type=int,
+        default=None,
+        help="Color temperature in Kelvin (2900-7000)",
+        choices=range(2900, 7001, 100),
+    )
+    parser_color.set_defaults(action=set_color)
 
     # Parse the command line arguments and dispatch to the correct subcommand.
     args = parser.parse_args(sys.argv[1:])
