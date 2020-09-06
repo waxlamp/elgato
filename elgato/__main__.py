@@ -1,16 +1,26 @@
 """Main module for elgato package."""
 
 import argparse
+import leglight
 import sys
 
 
+def first_light() -> leglight.LegLight:
+    """Return the first light found in the network."""
+    return leglight.discover(1)[0]
+
+
 def turn_on() -> int:
-    print("turn_on")
+    """Turn on the first light in the network."""
+    light = first_light()
+    light.on()
     return 0
 
 
 def turn_off() -> int:
-    print("turn_off")
+    """Turn off the first light in the network."""
+    light = first_light()
+    light.off()
     return 0
 
 
@@ -22,9 +32,11 @@ def main() -> int:
     # The main parser just knows how to print help when no subcommand is given,
     # and delegates to subparsers otherwise.
     parser = argparse.ArgumentParser(prog="elgato")
+
     def print_help():
         parser.print_help()
         return 1
+
     parser.set_defaults(action=print_help)
 
     # Define a series of subcommand parsers.
