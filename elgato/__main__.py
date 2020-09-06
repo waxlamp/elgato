@@ -33,7 +33,7 @@ def main() -> int:
     # and delegates to subparsers otherwise.
     parser = argparse.ArgumentParser(prog="elgato")
 
-    def print_help():
+    def print_help() -> int:
         parser.print_help()
         return 1
 
