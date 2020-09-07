@@ -119,10 +119,15 @@ def first_light() -> leglight.LegLight:
     return lights[0]
 
 
-def turn_on(light: Optional[leglight.LegLight] = None) -> int:
-    """Turn on the first light in the network."""
-    if light is None:
-        light = first_light()
+def get_light(which: int) -> leglight.LegLight:
+    """Return a LegLight object from an index."""
+    info = settings["discovered"].data[which]
+    return leglight.LegLight(info["address"], info["port"])
+
+
+def turn_on(which: int) -> int:
+    """Turn on the requested light."""
+    light = get_light(which)
     light.on()
     return 0
 
@@ -138,7 +143,7 @@ def turn_off(light: Optional[leglight.LegLight] = None) -> int:
 def toggle() -> int:
     """Toggle the first light in the network."""
     light = first_light()
-    return turn_on(light) if light.isOn == 0 else turn_off(light)
+    return turn_on(0) if light.isOn == 0 else turn_off(light)
 
 
 def set_color(color: Optional[int]) -> int:
@@ -227,6 +232,9 @@ def main() -> int:
     parser_discover.set_defaults(action=discover)
 
     parser_on = subparsers.add_parser("on", help="Turn a light on")
+    parser_on.add_argument(
+        "which", nargs="?", default=0, type=int, help="Which light to operate on"
+    )
     parser_on.set_defaults(action=turn_on)
 
     parser_off = subparsers.add_parser("off", help="Turn a light off")
