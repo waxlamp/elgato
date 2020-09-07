@@ -60,6 +60,39 @@ def set_brightness(brightness: Optional[int]) -> int:
     return light.brightness(brightness)
 
 
+def validate_color_temperature(s: str) -> int:
+    """Validate color temperature argument."""
+
+    try:
+        value = int(s)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{s} is not an integer")
+
+    if value < 2900 or value > 7000:
+        raise argparse.ArgumentTypeError(
+            "color temperature must be between 2900 and 7000"
+        )
+
+    if value % 100 != 0:
+        raise argparse.ArgumentTypeError("color temperate must be divisible by 100")
+
+    return value
+
+
+def validate_brightness(s: str) -> int:
+    """Validate brightness argument."""
+
+    try:
+        value = int(s)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{s} is not an integer")
+
+    if value < 0 or value > 100:
+        raise argparse.ArgumentTypeError("brightness must be between 0 and 100")
+
+    return value
+
+
 def main() -> int:
     """Run the elgato program."""
 
@@ -93,11 +126,10 @@ def main() -> int:
     parser_color.add_argument(
         "color",
         metavar="COLOR_TEMPERATURE",
-        type=int,
+        type=validate_color_temperature,
         nargs="?",
         default=None,
         help="Color temperature in Kelvin (2900-7000)",
-        choices=range(2900, 7001, 100),
     )
     parser_color.set_defaults(action=set_color)
 
@@ -107,11 +139,10 @@ def main() -> int:
     parser_brightness.add_argument(
         "brightness",
         metavar="BRIGHTNESS",
-        type=int,
+        type=validate_brightness,
         nargs="?",
         default=None,
         help="Brightness level (1-100)",
-        choices=range(1, 101),
     )
     parser_brightness.set_defaults(action=set_brightness)
 
