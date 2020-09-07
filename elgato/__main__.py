@@ -114,11 +114,11 @@ def get_settings() -> Settings:
 settings = get_settings()
 
 
-def discover(refresh: bool) -> int:
+def lights(discover: bool) -> int:
     """Discover the lights on the network, and display them."""
     discovered = settings["discovered"]
 
-    if refresh:
+    if discover:
         discovered.refresh()
 
     for index in range(len(discovered.lights)):
@@ -223,15 +223,15 @@ def main() -> int:
     # Define a series of subcommand parsers.
     subparsers = parser.add_subparsers(help="subcommand help")
 
-    parser_discover = subparsers.add_parser(
-        "discover", help="Find and display existing lights"
+    parser_lights = subparsers.add_parser(
+        "lights", help="Find and/or display existing lights"
     )
-    parser_discover.add_argument(
-        "--refresh",
+    parser_lights.add_argument(
+        "--discover",
         action="store_true",
         help="Query the network for lights and save the results",
     )
-    parser_discover.set_defaults(action=discover)
+    parser_lights.set_defaults(action=lights)
 
     parser_on = subparsers.add_parser("on", help="Turn a light on")
     parser_on.add_argument(
