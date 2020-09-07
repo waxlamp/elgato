@@ -160,15 +160,32 @@ def set_color(which: int, color: Optional[int]) -> int:
     return 0
 
 
-def set_brightness(which: int, brightness: Optional[int]) -> int:
+def set_brightness(
+    which: int, level: Optional[int], brighter: Optional[int], dimmer: Optional[int]
+) -> int:
     """Set the first light's brightness."""
     light = settings["discovered"].lights[which]
 
-    if brightness is None:
-        print(light.isBrightness)
-        return 0
+    delta: Optional[int] = None
 
-    light.brightness(brightness)
+    if level is not None:
+        light.brightness(level)
+    elif brighter is not None:
+        delta = 10 if brighter < 0 else brighter
+    elif dimmer is not None:
+        delta = -10 if dimmer < 0 else -dimmer
+    else:
+        print(light.isBrightness)
+
+    if delta is not None:
+        level = light.isBrightness + delta
+        if level < 0:
+            level = 0
+        elif level > 100:
+            level = 100
+
+        light.brightness(level)
+
     return 0
 
 
@@ -298,13 +315,31 @@ def main() -> int:
         type=int,
         help="Which light to operate on",
     )
-    parser_brightness.add_argument(
-        "brightness",
-        metavar="BRIGHTNESS",
+    group = parser_brightness.add_mutually_exclusive_group()
+    group.add_argument(
+        "--level",
+        metavar="LEVEL",
+        type=validate_brightness,
+        default=None,
+        help="Brightness level (0-100)",
+    )
+    group.add_argument(
+        "--brighter",
+        metavar="DELTA",
         type=validate_brightness,
         nargs="?",
+        const=-1,
         default=None,
-        help="Brightness level (1-100)",
+        help="Brightness change (0-100)",
+    )
+    group.add_argument(
+        "--dimmer",
+        metavar="DELTA",
+        type=validate_brightness,
+        nargs="?",
+        const=-1,
+        default=None,
+        help="Brightness change (0-100)",
     )
     parser_brightness.set_defaults(action=set_brightness)
 
