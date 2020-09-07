@@ -145,9 +145,9 @@ def toggle(which: int) -> int:
     return turn_on(which) if light.isOn == 0 else turn_off(which)
 
 
-def set_color(color: Optional[int]) -> int:
+def set_color(which: int, color: Optional[int]) -> int:
     """Set the first light's color temperature."""
-    light = first_light()
+    light = get_light(which)
 
     if color is None:
         print(int(light.isTemperature))
@@ -157,9 +157,9 @@ def set_color(color: Optional[int]) -> int:
     return 0
 
 
-def set_brightness(brightness: Optional[int]) -> int:
+def set_brightness(which: int, brightness: Optional[int]) -> int:
     """Set the first light's brightness."""
-    light = first_light()
+    light = get_light(which)
 
     if brightness is None:
         print(light.isBrightness)
@@ -252,6 +252,9 @@ def main() -> int:
         "color", help="Set a light's color temperature"
     )
     parser_color.add_argument(
+        "which", nargs="?", default=0, type=int, help="Which light to operate on"
+    )
+    parser_color.add_argument(
         "color",
         metavar="COLOR_TEMPERATURE",
         type=validate_color_temperature,
@@ -263,6 +266,9 @@ def main() -> int:
 
     parser_brightness = subparsers.add_parser(
         "brightness", help="Set a light's brightness"
+    )
+    parser_brightness.add_argument(
+        "which", nargs="?", default=0, type=int, help="Which light to operate on"
     )
     parser_brightness.add_argument(
         "brightness",
