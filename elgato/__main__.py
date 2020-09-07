@@ -38,15 +38,25 @@ def toggle() -> int:
     return turn_on(light) if light.isOn == 0 else turn_off(light)
 
 
-def set_color(color: int) -> int:
+def set_color(color: Optional[int]) -> int:
     """Set the first light's color temperature."""
     light = first_light()
+
+    if color is None:
+        print(int(light.isTemperature))
+        return 0
+
     return light.color(color)
 
 
-def set_brightness(brightness: int) -> int:
+def set_brightness(brightness: Optional[int]) -> int:
     """Set the first light's brightness."""
     light = first_light()
+
+    if brightness is None:
+        print(light.isBrightness)
+        return 0
+
     return light.brightness(brightness)
 
 
@@ -84,6 +94,7 @@ def main() -> int:
         "color",
         metavar="COLOR_TEMPERATURE",
         type=int,
+        nargs="?",
         default=None,
         help="Color temperature in Kelvin (2900-7000)",
         choices=range(2900, 7001, 100),
@@ -97,6 +108,7 @@ def main() -> int:
         "brightness",
         metavar="BRIGHTNESS",
         type=int,
+        nargs="?",
         default=None,
         help="Brightness level (1-100)",
         choices=range(1, 101),
