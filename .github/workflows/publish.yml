@@ -16,4 +16,5 @@ jobs:
           python-version: '3.8'
           architecture: 'x64'
 
-      - run: python setup.py --version
+      - run: python setup.py sdist
+      - run: ls -l dist/
