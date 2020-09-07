@@ -121,7 +121,11 @@ def first_light() -> leglight.LegLight:
 
 def get_light(which: int) -> leglight.LegLight:
     """Return a LegLight object from an index."""
-    info = settings["discovered"].data[which]
+    try:
+        info = settings["discovered"].data[which]
+    except IndexError:
+        raise RuntimeError(f"Light {which} does not exist")
+
     return leglight.LegLight(info["address"], info["port"])
 
 
@@ -232,19 +236,34 @@ def main() -> int:
 
     parser_on = subparsers.add_parser("on", help="Turn a light on")
     parser_on.add_argument(
-        "which", nargs="?", default=0, type=int, help="Which light to operate on"
+        "which",
+        metavar="WHICH",
+        nargs="?",
+        default=0,
+        type=int,
+        help="Which light to operate on",
     )
     parser_on.set_defaults(action=turn_on)
 
     parser_off = subparsers.add_parser("off", help="Turn a light off")
     parser_off.add_argument(
-        "which", nargs="?", default=0, type=int, help="Which light to operate on"
+        "which",
+        metavar="WHICH",
+        nargs="?",
+        default=0,
+        type=int,
+        help="Which light to operate on",
     )
     parser_off.set_defaults(action=turn_off)
 
     parser_toggle = subparsers.add_parser("toggle", help="Toggle a light")
     parser_toggle.add_argument(
-        "which", nargs="?", default=0, type=int, help="Which light to operate on"
+        "which",
+        metavar="WHICH",
+        nargs="?",
+        default=0,
+        type=int,
+        help="Which light to operate on",
     )
     parser_toggle.set_defaults(action=toggle)
 
@@ -252,7 +271,12 @@ def main() -> int:
         "color", help="Set a light's color temperature"
     )
     parser_color.add_argument(
-        "which", nargs="?", default=0, type=int, help="Which light to operate on"
+        "which",
+        metavar="WHICH",
+        nargs="?",
+        default=0,
+        type=int,
+        help="Which light to operate on",
     )
     parser_color.add_argument(
         "color",
@@ -268,7 +292,12 @@ def main() -> int:
         "brightness", help="Set a light's brightness"
     )
     parser_brightness.add_argument(
-        "which", nargs="?", default=0, type=int, help="Which light to operate on"
+        "which",
+        metavar="WHICH",
+        nargs="?",
+        default=0,
+        type=int,
+        help="Which light to operate on",
     )
     parser_brightness.add_argument(
         "brightness",
@@ -284,7 +313,12 @@ def main() -> int:
     args = parser.parse_args(sys.argv[1:])
     action = args.action
     del args.action
-    return action(**vars(args))
+
+    try:
+        return action(**vars(args))
+    except RuntimeError as e:
+        print(e, file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
