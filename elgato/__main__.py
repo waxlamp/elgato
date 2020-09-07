@@ -7,35 +7,75 @@ import os
 import sys
 from typing import List, Literal, Optional, TypedDict
 
-LightInfo = TypedDict(
-    "LightInfo",
-    {
-        "name": str,
-        "power": Literal["off", "on"],
-        "brightness": int,
-        "color": int,
-        "address": str,
-        "port": int,
-    },
-)
+
+class DiscoveredLight(TypedDict):
+    """Type of persisted light information."""
+
+    address: str
+    port: int
+
+
+class LightInfo(DiscoveredLight):
+    """Type of runtime light information."""
+
+    name: str
+    power: Literal["off", "on"]
+    brightness: int
+    color: int
 
 
 class Discovered:
     """Active record class for retrieving/saving light list."""
 
     path: str
-    data: List[LightInfo]
+    lights: List[leglight.LegLight]
 
     def __init__(self, path: str) -> None:
         """Initialize with a path to a JSON file."""
         self.path = path
         with open(path) as f:
-            self.data = json.loads(f.read())
+            lights: List[DiscoveredLight] = json.loads(f.read())
+            self.lights = [
+                leglight.LegLight(light["address"], light["port"]) for light in lights
+            ]
+
+    def refresh(self) -> None:
+        """Discover the lights on the network."""
+        lights = leglight.discover(5)
+        self.lights = [leglight.LegLight(light.address, light.port) for light in lights]
+        self.save()
 
     def save(self) -> None:
         """Save the current data to the file this instance was opened from."""
         with open(self.path, "w") as f:
-            f.write(json.dumps(self.data))
+            f.write(
+                json.dumps(
+                    [
+                        {"address": light.address, "port": light.port}
+                        for light in self.lights
+                    ]
+                )
+            )
+
+    def light_info(self, which: int) -> LightInfo:
+        """Construct a LightInfo object from an index."""
+        light = self.lights[which]
+
+        return {
+            "name": f"{light.productName} {light.serialNumber}",
+            "power": "off" if light.isOn == 0 else "on",
+            "brightness": light.isBrightness,
+            "color": int(light.isTemperature),
+            "address": light.address,
+            "port": light.port,
+        }
+
+    def print_light_info(self, which: int) -> None:
+        """Print information about a light by index."""
+        light = self.light_info(which)
+        spacing = max(len(key) for key in light.keys())
+        for key in light:
+            print(f"    {key.rjust(spacing)}: {light[key]}")  # type: ignore
 
 
 Settings = TypedDict(
@@ -74,74 +114,43 @@ def get_settings() -> Settings:
 settings = get_settings()
 
 
-def light_info(light: leglight.LegLight) -> LightInfo:
-    """Map a leglight light object to a dict of printable values."""
-    return {
-        "name": f"{light.productName} {light.serialNumber}",
-        "power": "off" if light.isOn == 0 else "on",
-        "brightness": light.isBrightness,
-        "color": int(light.isTemperature),
-        "address": light.address,
-        "port": light.port,
-    }
-
-
-def print_light_info(light: LightInfo) -> None:
-    """Print an instance of a LightInfo to stdout."""
-    spacing = max(len(key) for key in light.keys())
-    for key in light:
-        print(f"    {key.rjust(spacing)}: {light[key]}")  # type: ignore
-
-
 def discover(refresh: bool) -> int:
     """Discover the lights on the network, and display them."""
     discovered = settings["discovered"]
 
     if refresh:
-        lights = leglight.discover(5)
-        discovered.data = [light_info(light) for light in lights]
-        discovered.save()
+        discovered.refresh()
 
-    for index, light in enumerate(discovered.data):
+    for index in range(len(discovered.lights)):
         print(f"Light {index}")
-        print_light_info(light)
+        discovered.print_light_info(index)
 
     return 0
 
 
-def get_light(which: int) -> leglight.LegLight:
-    """Return a LegLight object from an index."""
-    try:
-        info = settings["discovered"].data[which]
-    except IndexError:
-        raise RuntimeError(f"Light {which} does not exist")
-
-    return leglight.LegLight(info["address"], info["port"])
-
-
 def turn_on(which: int) -> int:
     """Turn on the requested light."""
-    light = get_light(which)
+    light = settings["discovered"].lights[which]
     light.on()
     return 0
 
 
 def turn_off(which: int) -> int:
     """Turn off the requested light."""
-    light = get_light(which)
+    light = settings["discovered"].lights[which]
     light.off()
     return 0
 
 
 def toggle(which: int) -> int:
     """Toggle the requested light."""
-    light = get_light(which)
+    light = settings["discovered"].lights[which]
     return turn_on(which) if light.isOn == 0 else turn_off(which)
 
 
 def set_color(which: int, color: Optional[int]) -> int:
     """Set the first light's color temperature."""
-    light = get_light(which)
+    light = settings["discovered"].lights[which]
 
     if color is None:
         print(int(light.isTemperature))
@@ -153,7 +162,7 @@ def set_color(which: int, color: Optional[int]) -> int:
 
 def set_brightness(which: int, brightness: Optional[int]) -> int:
     """Set the first light's brightness."""
-    light = get_light(which)
+    light = settings["discovered"].lights[which]
 
     if brightness is None:
         print(light.isBrightness)
