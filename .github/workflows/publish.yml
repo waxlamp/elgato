@@ -16,5 +16,7 @@ jobs:
           python-version: '3.8'
           architecture: 'x64'
 
-      - run: python setup.py sdist
-      - run: ls -l dist/
+      - run: pip install twine
+
+      - run: python setup.py sdist bdist_wheel
+      - run: twine upload -r testpypi dist/*
