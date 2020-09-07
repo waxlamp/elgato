@@ -148,15 +148,32 @@ def toggle(which: int) -> int:
     return turn_on(which) if light.isOn == 0 else turn_off(which)
 
 
-def set_color(which: int, color: Optional[int]) -> int:
+def set_color(
+    which: int, level: Optional[int], warmer: Optional[int], cooler: Optional[int]
+) -> int:
     """Set the first light's color temperature."""
     light = settings["discovered"].lights[which]
 
-    if color is None:
-        print(int(light.isTemperature))
-        return 0
+    delta: Optional[int] = None
 
-    light.color(color)
+    if level is not None:
+        light.color(level)
+    elif warmer is not None:
+        delta = 500 if warmer < 0 else warmer
+    elif cooler is not None:
+        delta = -500 if cooler < 0 else -cooler
+    else:
+        print(int(light.isTemperature))
+
+    if delta is not None:
+        level = int(light.isTemperature) + delta
+        if level < 2900:
+            level = 2900
+        elif level > 7000:
+            level = 7000
+
+        light.color(level)
+
     return 0
 
 
@@ -203,7 +220,28 @@ def validate_color_temperature(s: str) -> int:
         )
 
     if value % 100 != 0:
-        raise argparse.ArgumentTypeError("color temperate must be divisible by 100")
+        raise argparse.ArgumentTypeError("color temperature must be divisible by 100")
+
+    return value
+
+
+def validate_color_delta(s: str) -> int:
+    """Validate color temperature delta argument."""
+
+    try:
+        value = int(s)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{s} is not an integer")
+
+    if value < 0 or value > 4100:
+        raise argparse.ArgumentTypeError(
+            "color temperature change must be between 0 and 4100"
+        )
+
+    if value % 100 != 0:
+        raise argparse.ArgumentTypeError(
+            "color temperature change must be divisible by 100"
+        )
 
     return value
 
@@ -294,13 +332,31 @@ def main() -> int:
         type=int,
         help="Which light to operate on",
     )
-    parser_color.add_argument(
-        "color",
-        metavar="COLOR_TEMPERATURE",
+    group = parser_color.add_mutually_exclusive_group()
+    group.add_argument(
+        "--level",
+        metavar="LEVEL",
         type=validate_color_temperature,
-        nargs="?",
         default=None,
         help="Color temperature in Kelvin (2900-7000)",
+    )
+    group.add_argument(
+        "--warmer",
+        metavar="DELTA",
+        type=validate_color_delta,
+        nargs="?",
+        const=-1,
+        default=None,
+        help="Color temperature change (0-4100)",
+    )
+    group.add_argument(
+        "--cooler",
+        metavar="DELTA",
+        type=validate_color_delta,
+        nargs="?",
+        const=-1,
+        default=None,
+        help="Color temperature change (0-4100)",
     )
     parser_color.set_defaults(action=set_color)
 
