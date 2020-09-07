@@ -1,10 +1,10 @@
 """setup.py for elgato package."""
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name="elgato",
-    version="0.1.0",
+    use_scm_version=True,
     author="Roni Choudhury",
     author_email="aichoudh@gmail.com",
     packages=["elgato"],
@@ -17,5 +17,8 @@ setup(
     long_description=open("README.md").read(),
     install_requires=[
         "leglight == 0.2.0",
+    ],
+    setup_requires=[
+        "setuptools_scm",
     ],
 )
