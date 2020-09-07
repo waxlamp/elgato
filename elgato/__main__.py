@@ -109,16 +109,6 @@ def discover(refresh: bool) -> int:
     return 0
 
 
-def first_light() -> leglight.LegLight:
-    """Return the first light found in the network."""
-    lights: List[leglight.LegLight] = []
-    timeout = 0.0
-    while not lights:
-        timeout += 0.5
-        lights = leglight.discover(timeout)
-    return lights[0]
-
-
 def get_light(which: int) -> leglight.LegLight:
     """Return a LegLight object from an index."""
     try:
