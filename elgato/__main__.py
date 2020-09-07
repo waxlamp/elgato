@@ -44,6 +44,12 @@ def set_color(color: int) -> int:
     return light.color(color)
 
 
+def set_brightness(brightness: int) -> int:
+    """Set the first light's brightness."""
+    light = first_light()
+    return light.brightness(brightness)
+
+
 def main() -> int:
     """Run the elgato program."""
 
@@ -83,6 +89,19 @@ def main() -> int:
         choices=range(2900, 7001, 100),
     )
     parser_color.set_defaults(action=set_color)
+
+    parser_brightness = subparsers.add_parser(
+        "brightness", help="Set a light's brightness"
+    )
+    parser_brightness.add_argument(
+        "brightness",
+        metavar="BRIGHTNESS",
+        type=int,
+        default=None,
+        help="Brightness level (1-100)",
+        choices=range(1, 101),
+    )
+    parser_brightness.set_defaults(action=set_brightness)
 
     # Parse the command line arguments and dispatch to the correct subcommand.
     args = parser.parse_args(sys.argv[1:])
