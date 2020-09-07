@@ -88,17 +88,7 @@ class Discovered:
             print(f"    {key.rjust(spacing)}: {light[key]}")  # type: ignore
 
 
-Settings = TypedDict(
-    "Settings",
-    {
-        "config_dir": str,
-        "discovered_file": str,
-        "discovered": Discovered,
-    },
-)
-
-
-def get_settings() -> Settings:
+def get_discovered_lights() -> Discovered:
     """Return the current settings."""
     config_dir = os.getenv("ELGATO_CONFIG_DIR", os.path.expanduser("~/.config/elgato"))
     discovered_file = os.path.join(config_dir, "discovered.json")
@@ -112,22 +102,14 @@ def get_settings() -> Settings:
         with open(discovered_file, "w") as f:
             f.write("[]")
 
-    discovered = Discovered(discovered_file)
-
-    return {
-        "config_dir": config_dir,
-        "discovered_file": discovered_file,
-        "discovered": discovered,
-    }
+    return Discovered(discovered_file)
 
 
-settings = get_settings()
+discovered = get_discovered_lights()
 
 
 def lights(discover: bool) -> int:
     """Discover the lights on the network, and display them."""
-    discovered = settings["discovered"]
-
     if discover:
         discovered.refresh()
 
@@ -140,21 +122,21 @@ def lights(discover: bool) -> int:
 
 def turn_on(which: int) -> int:
     """Turn on the requested light."""
-    light = settings["discovered"].get_light(which)
+    light = discovered.get_light(which)
     light.on()
     return 0
 
 
 def turn_off(which: int) -> int:
     """Turn off the requested light."""
-    light = settings["discovered"].get_light(which)
+    light = discovered.get_light(which)
     light.off()
     return 0
 
 
 def toggle(which: int) -> int:
     """Toggle the requested light."""
-    light = settings["discovered"].get_light(which)
+    light = discovered.get_light(which)
     return turn_on(which) if light.isOn == 0 else turn_off(which)
 
 
@@ -162,7 +144,7 @@ def set_color(
     which: int, level: Optional[int], warmer: Optional[int], cooler: Optional[int]
 ) -> int:
     """Set the first light's color temperature."""
-    light = settings["discovered"].get_light(which)
+    light = discovered.get_light(which)
 
     delta: Optional[int] = None
 
@@ -191,7 +173,7 @@ def set_brightness(
     which: int, level: Optional[int], brighter: Optional[int], dimmer: Optional[int]
 ) -> int:
     """Set the first light's brightness."""
-    light = settings["discovered"].get_light(which)
+    light = discovered.get_light(which)
 
     delta: Optional[int] = None
 
