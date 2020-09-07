@@ -1,9 +1,112 @@
 """Main module for elgato package."""
 
 import argparse
+import json
 import leglight
+import os
 import sys
-from typing import List, Optional
+from typing import List, Literal, Optional, TypedDict
+
+LightInfo = TypedDict(
+    "LightInfo",
+    {
+        "name": str,
+        "power": Literal["off", "on"],
+        "brightness": int,
+        "color": int,
+        "address": str,
+        "port": int,
+    },
+)
+
+
+class Discovered:
+    """Active record class for retrieving/saving light list."""
+
+    path: str
+    data: List[LightInfo]
+
+    def __init__(self, path: str) -> None:
+        """Initialize with a path to a JSON file."""
+        self.path = path
+        with open(path) as f:
+            self.data = json.loads(f.read())
+
+    def save(self) -> None:
+        """Save the current data to the file this instance was opened from."""
+        with open(self.path, "w") as f:
+            f.write(json.dumps(self.data))
+
+
+Settings = TypedDict(
+    "Settings",
+    {
+        "config_dir": str,
+        "discovered_file": str,
+        "discovered": Discovered,
+    },
+)
+
+
+def get_settings() -> Settings:
+    """Return the current settings."""
+    config_dir = os.getenv("ELGATO_CONFIG_DIR", os.path.expanduser("~/.config/elgato"))
+    discovered_file = os.path.join(config_dir, "discovered.json")
+
+    # Ensure config directory exists.
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
+
+    # Ensure discovered lights file exists.
+    if not os.path.exists(discovered_file):
+        with open(discovered_file, "w") as f:
+            f.write("[]")
+
+    discovered = Discovered(discovered_file)
+
+    return {
+        "config_dir": config_dir,
+        "discovered_file": discovered_file,
+        "discovered": discovered,
+    }
+
+
+settings = get_settings()
+
+
+def light_info(light: leglight.LegLight) -> LightInfo:
+    """Map a leglight light object to a dict of printable values."""
+    return {
+        "name": f"{light.productName} {light.serialNumber}",
+        "power": "off" if light.isOn == 0 else "on",
+        "brightness": light.isBrightness,
+        "color": int(light.isTemperature),
+        "address": light.address,
+        "port": light.port,
+    }
+
+
+def print_light_info(light: LightInfo) -> None:
+    """Print an instance of a LightInfo to stdout."""
+    spacing = max(len(key) for key in light.keys())
+    for key in light:
+        print(f"    {key.rjust(spacing)}: {light[key]}")  # type: ignore
+
+
+def discover(refresh: bool) -> int:
+    """Discover the lights on the network, and display them."""
+    discovered = settings["discovered"]
+
+    if refresh:
+        lights = leglight.discover(5)
+        discovered.data = [light_info(light) for light in lights]
+        discovered.save()
+
+    for index, light in enumerate(discovered.data):
+        print(f"Light {index}")
+        print_light_info(light)
+
+    return 0
 
 
 def first_light() -> leglight.LegLight:
@@ -112,6 +215,16 @@ def main() -> int:
 
     # Define a series of subcommand parsers.
     subparsers = parser.add_subparsers(help="subcommand help")
+
+    parser_discover = subparsers.add_parser(
+        "discover", help="Find and display existing lights"
+    )
+    parser_discover.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Query the network for lights and save the results",
+    )
+    parser_discover.set_defaults(action=discover)
 
     parser_on = subparsers.add_parser("on", help="Turn a light on")
     parser_on.set_defaults(action=turn_on)

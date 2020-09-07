@@ -4,6 +4,10 @@ class LegLight:
     isOn: int
     isTemperature: float
     isBrightness: int
+    productName: str
+    serialNumber: str
+    address: str
+    port: int
     def on(self) -> None: ...
     def off(self) -> None: ...
     def color(self, temp: float) -> None: ...
