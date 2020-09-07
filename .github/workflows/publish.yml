@@ -18,7 +18,8 @@ jobs:
 
       - run: pip install twine
 
-      - run: "echo $TWINE_USERNAME"
-
       - run: python setup.py sdist bdist_wheel
       - run: twine upload -r testpypi dist/*
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
