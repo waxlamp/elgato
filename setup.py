@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(
-    name="elgato",
+    name="PyElgato",
     use_scm_version=True,
     author="Roni Choudhury",
     author_email="aichoudh@gmail.com",
