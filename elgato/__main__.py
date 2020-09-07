@@ -57,9 +57,19 @@ class Discovered:
                 )
             )
 
+    def get_light(self, which: int) -> leglight.LegLight:
+        """Return a light by index, guarding against out-of-range requests."""
+        try:
+            return self.lights[which]
+        except IndexError:
+            raise RuntimeError(
+                "no such light (try running `elgato lights` or "
+                "`elgato lights --discover` to see what lights are available)"
+            )
+
     def light_info(self, which: int) -> LightInfo:
         """Construct a LightInfo object from an index."""
-        light = self.lights[which]
+        light = self.get_light(which)
 
         return {
             "name": f"{light.productName} {light.serialNumber}",
@@ -130,21 +140,21 @@ def lights(discover: bool) -> int:
 
 def turn_on(which: int) -> int:
     """Turn on the requested light."""
-    light = settings["discovered"].lights[which]
+    light = settings["discovered"].get_light(which)
     light.on()
     return 0
 
 
 def turn_off(which: int) -> int:
     """Turn off the requested light."""
-    light = settings["discovered"].lights[which]
+    light = settings["discovered"].get_light(which)
     light.off()
     return 0
 
 
 def toggle(which: int) -> int:
     """Toggle the requested light."""
-    light = settings["discovered"].lights[which]
+    light = settings["discovered"].get_light(which)
     return turn_on(which) if light.isOn == 0 else turn_off(which)
 
 
@@ -152,7 +162,7 @@ def set_color(
     which: int, level: Optional[int], warmer: Optional[int], cooler: Optional[int]
 ) -> int:
     """Set the first light's color temperature."""
-    light = settings["discovered"].lights[which]
+    light = settings["discovered"].get_light(which)
 
     delta: Optional[int] = None
 
@@ -181,7 +191,7 @@ def set_brightness(
     which: int, level: Optional[int], brighter: Optional[int], dimmer: Optional[int]
 ) -> int:
     """Set the first light's brightness."""
-    light = settings["discovered"].lights[which]
+    light = settings["discovered"].get_light(which)
 
     delta: Optional[int] = None
 
