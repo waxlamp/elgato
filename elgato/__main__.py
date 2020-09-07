@@ -139,10 +139,10 @@ def turn_off(which: int) -> int:
     return 0
 
 
-def toggle() -> int:
-    """Toggle the first light in the network."""
-    light = first_light()
-    return turn_on(0) if light.isOn == 0 else turn_off(0)
+def toggle(which: int) -> int:
+    """Toggle the requested light."""
+    light = get_light(which)
+    return turn_on(which) if light.isOn == 0 else turn_off(which)
 
 
 def set_color(color: Optional[int]) -> int:
@@ -243,6 +243,9 @@ def main() -> int:
     parser_off.set_defaults(action=turn_off)
 
     parser_toggle = subparsers.add_parser("toggle", help="Toggle a light")
+    parser_toggle.add_argument(
+        "which", nargs="?", default=0, type=int, help="Which light to operate on"
+    )
     parser_toggle.set_defaults(action=toggle)
 
     parser_color = subparsers.add_parser(
