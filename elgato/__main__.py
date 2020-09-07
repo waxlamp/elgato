@@ -3,13 +3,13 @@
 import argparse
 import leglight
 import sys
-from typing import Optional
+from typing import List, Optional
 
 
 def first_light() -> leglight.LegLight:
     """Return the first light found in the network."""
-    lights = []
-    timeout = 0
+    lights: List[leglight.LegLight] = []
+    timeout = 0.0
     while not lights:
         timeout += 0.5
         lights = leglight.discover(timeout)
@@ -46,7 +46,8 @@ def set_color(color: Optional[int]) -> int:
         print(int(light.isTemperature))
         return 0
 
-    return light.color(color)
+    light.color(color)
+    return 0
 
 
 def set_brightness(brightness: Optional[int]) -> int:
@@ -57,7 +58,8 @@ def set_brightness(brightness: Optional[int]) -> int:
         print(light.isBrightness)
         return 0
 
-    return light.brightness(brightness)
+    light.brightness(brightness)
+    return 0
 
 
 def validate_color_temperature(s: str) -> int:
