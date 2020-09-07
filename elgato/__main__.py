@@ -267,7 +267,9 @@ def main() -> int:
     #
     # The main parser just knows how to print help when no subcommand is given,
     # and delegates to subparsers otherwise.
-    parser = argparse.ArgumentParser(prog="elgato")
+    parser = argparse.ArgumentParser(
+        description="Control utility for El Gato brand lights."
+    )
 
     def print_help() -> int:
         parser.print_help()
@@ -276,10 +278,15 @@ def main() -> int:
     parser.set_defaults(action=print_help)
 
     # Define a series of subcommand parsers.
-    subparsers = parser.add_subparsers(help="subcommand help")
+    subparsers = parser.add_subparsers(title="subcommands")
 
     parser_lights = subparsers.add_parser(
-        "lights", help="Find and/or display existing lights"
+        "lights",
+        help="Display/refresh list of discovered lights",
+        description=(
+            "Display information about known lights, "
+            "and query the local network to refresh the list"
+        ),
     )
     parser_lights.add_argument(
         "--discover",
@@ -288,41 +295,49 @@ def main() -> int:
     )
     parser_lights.set_defaults(action=lights)
 
-    parser_on = subparsers.add_parser("on", help="Turn a light on")
+    parser_on = subparsers.add_parser(
+        "on", help="Turn a light on", description="Turn a light on"
+    )
     parser_on.add_argument(
         "which",
         metavar="WHICH",
         nargs="?",
         default=0,
         type=int,
-        help="Which light to operate on",
+        help="Which light to turn on (default: 0)",
     )
     parser_on.set_defaults(action=turn_on)
 
-    parser_off = subparsers.add_parser("off", help="Turn a light off")
+    parser_off = subparsers.add_parser(
+        "off", help="Turn a light off", description="Turn a light off"
+    )
     parser_off.add_argument(
         "which",
         metavar="WHICH",
         nargs="?",
         default=0,
         type=int,
-        help="Which light to operate on",
+        help="Which light to turn off (default: 0)",
     )
     parser_off.set_defaults(action=turn_off)
 
-    parser_toggle = subparsers.add_parser("toggle", help="Toggle a light")
+    parser_toggle = subparsers.add_parser(
+        "toggle", help="Toggle a light", description="Toggle a light"
+    )
     parser_toggle.add_argument(
         "which",
         metavar="WHICH",
         nargs="?",
         default=0,
         type=int,
-        help="Which light to operate on",
+        help="Which light to toggle (default: 0)",
     )
     parser_toggle.set_defaults(action=toggle)
 
     parser_color = subparsers.add_parser(
-        "color", help="Set a light's color temperature"
+        "color",
+        help="Set or query a light's color temperature",
+        description="Set or query a light's color temperature",
     )
     parser_color.add_argument(
         "which",
@@ -330,7 +345,7 @@ def main() -> int:
         nargs="?",
         default=0,
         type=int,
-        help="Which light to operate on",
+        help="Which light to operate on (default: 0)",
     )
     group = parser_color.add_mutually_exclusive_group()
     group.add_argument(
@@ -338,7 +353,10 @@ def main() -> int:
         metavar="LEVEL",
         type=validate_color_temperature,
         default=None,
-        help="Color temperature in Kelvin (2900-7000)",
+        help=(
+            "Color temperature in Kelvin (2900-7000); "
+            "omit argument to display current value"
+        ),
     )
     group.add_argument(
         "--warmer",
@@ -347,7 +365,7 @@ def main() -> int:
         nargs="?",
         const=-1,
         default=None,
-        help="Color temperature change (0-4100)",
+        help="Color temperature change (0-4100) (default: 500)",
     )
     group.add_argument(
         "--cooler",
@@ -356,12 +374,14 @@ def main() -> int:
         nargs="?",
         const=-1,
         default=None,
-        help="Color temperature change (0-4100)",
+        help="Color temperature change (0-4100) (default: 500)",
     )
     parser_color.set_defaults(action=set_color)
 
     parser_brightness = subparsers.add_parser(
-        "brightness", help="Set a light's brightness"
+        "brightness",
+        help="Set or query a light's brightness",
+        description="Set or query a light's brightness",
     )
     parser_brightness.add_argument(
         "which",
@@ -369,7 +389,7 @@ def main() -> int:
         nargs="?",
         default=0,
         type=int,
-        help="Which light to operate on",
+        help="Which light to operate on (default: 0)",
     )
     group = parser_brightness.add_mutually_exclusive_group()
     group.add_argument(
@@ -377,7 +397,7 @@ def main() -> int:
         metavar="LEVEL",
         type=validate_brightness,
         default=None,
-        help="Brightness level (0-100)",
+        help="Brightness level (0-100); omit argument to display current value",
     )
     group.add_argument(
         "--brighter",
@@ -386,7 +406,7 @@ def main() -> int:
         nargs="?",
         const=-1,
         default=None,
-        help="Brightness change (0-100)",
+        help="Brightness change (0-100) (default: 10)",
     )
     group.add_argument(
         "--dimmer",
@@ -395,7 +415,7 @@ def main() -> int:
         nargs="?",
         const=-1,
         default=None,
-        help="Brightness change (0-100)",
+        help="Brightness change (0-100) (default: 10)",
     )
     parser_brightness.set_defaults(action=set_brightness)
 
