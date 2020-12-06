@@ -37,16 +37,24 @@ class Discovered:
     """Active record class for retrieving/saving light list."""
 
     path: str
-    lights: List[leglight.LegLight]
+    lights: List[leglight.LegLight] = []
 
     def __init__(self, path: str) -> None:
         """Initialize with a path to a JSON file."""
         self.path = path
         with open(path) as f:
             lights: List[DiscoveredLight] = json.loads(f.read())
-            self.lights = [
-                leglight.LegLight(light["address"], light["port"]) for light in lights
-            ]
+            ok = True
+            for (i, light) in enumerate(lights):
+                try:
+                    self.lights.append(leglight.LegLight(light["address"], light["port"]))
+                except requests.exceptions.Timeout:
+                    print(f"Light {i} ({light['address']}:{light['port']}) could not be found", file=sys.stderr)
+                    ok = False
+
+            if not ok:
+                print(f"You may want to run light discovery again (`elgato lights --discover`)")
+
 
     def refresh(self) -> None:
         """Discover the lights on the network."""
