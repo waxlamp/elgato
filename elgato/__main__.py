@@ -10,10 +10,16 @@ from typing import List, Literal, Optional, TypedDict
 
 # Monkeypatch requests to provide a timeout for all GET requests.
 import requests
+
 old_get = requests.get
+
+
 def new_get(*args, **kwargs):
+    """Wrap calls to requests.get() with injection of a timeout."""
     kwargs["timeout"] = 2
     return old_get(*args, **kwargs)
+
+
 requests.get = new_get
 
 
@@ -44,19 +50,28 @@ class Discovered:
         self.path = path
 
     def hydrate(self) -> None:
+        """Hydrate with light data from the config file."""
         with open(self.path) as f:
             lights: List[DiscoveredLight] = json.loads(f.read())
             ok = True
             for (i, light) in enumerate(lights):
                 try:
-                    self.lights.append(leglight.LegLight(light["address"], light["port"]))
+                    self.lights.append(
+                        leglight.LegLight(light["address"], light["port"])
+                    )
                 except requests.exceptions.Timeout:
-                    print(f"Light {i} ({light['address']}:{light['port']}) could not be found", file=sys.stderr)
+                    print(
+                        f"Light {i} ({light['address']}:{light['port']}) "
+                        "could not be found",
+                        file=sys.stderr,
+                    )
                     ok = False
 
             if not ok:
-                print(f"You may want to run light discovery again (`elgato lights --discover`)")
-
+                print(
+                    "You may want to run light discovery again "
+                    "(`elgato lights --discover`)"
+                )
 
     def refresh(self) -> None:
         """Discover the lights on the network."""
