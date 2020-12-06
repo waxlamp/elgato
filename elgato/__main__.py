@@ -8,6 +8,15 @@ import sys
 from typing import List, Literal, Optional, TypedDict
 
 
+# Monkeypatch requests to provide a timeout for all GET requests.
+import requests
+old_get = requests.get
+def new_get(*args, **kwargs):
+    kwargs["timeout"] = 2
+    return old_get(*args, **kwargs)
+requests.get = new_get
+
+
 class DiscoveredLight(TypedDict):
     """Type of persisted light information."""
 
