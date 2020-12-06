@@ -42,7 +42,9 @@ class Discovered:
     def __init__(self, path: str) -> None:
         """Initialize with a path to a JSON file."""
         self.path = path
-        with open(path) as f:
+
+    def hydrate(self) -> None:
+        with open(self.path) as f:
             lights: List[DiscoveredLight] = json.loads(f.read())
             ok = True
             for (i, light) in enumerate(lights):
@@ -129,6 +131,8 @@ def lights(discover: bool) -> int:
     """Discover the lights on the network, and display them."""
     if discover:
         discovered.refresh()
+    else:
+        discovered.hydrate()
 
     for index in range(len(discovered.lights)):
         print(f"Light {index}")
@@ -139,6 +143,7 @@ def lights(discover: bool) -> int:
 
 def turn_on(which: int) -> int:
     """Turn on the requested light."""
+    discovered.hydrate()
     light = discovered.get_light(which)
     light.on()
     return 0
@@ -146,6 +151,7 @@ def turn_on(which: int) -> int:
 
 def turn_off(which: int) -> int:
     """Turn off the requested light."""
+    discovered.hydrate()
     light = discovered.get_light(which)
     light.off()
     return 0
@@ -153,6 +159,7 @@ def turn_off(which: int) -> int:
 
 def toggle(which: int) -> int:
     """Toggle the requested light."""
+    discovered.hydrate()
     light = discovered.get_light(which)
     return turn_on(which) if light.isOn == 0 else turn_off(which)
 
@@ -161,6 +168,7 @@ def set_color(
     which: int, level: Optional[int], warmer: Optional[int], cooler: Optional[int]
 ) -> int:
     """Set the first light's color temperature."""
+    discovered.hydrate()
     light = discovered.get_light(which)
 
     delta: Optional[int] = None
@@ -190,6 +198,7 @@ def set_brightness(
     which: int, level: Optional[int], brighter: Optional[int], dimmer: Optional[int]
 ) -> int:
     """Set the first light's brightness."""
+    discovered.hydrate()
     light = discovered.get_light(which)
 
     delta: Optional[int] = None
