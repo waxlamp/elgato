@@ -5,7 +5,7 @@ import json
 import leglight
 import os
 import sys
-from typing import List, Literal, Optional, TypedDict
+from typing import Any, List, Literal, Optional, TypedDict
 
 
 # Monkeypatch requests to provide a timeout for all GET requests.
@@ -14,7 +14,7 @@ import requests
 old_get = requests.get
 
 
-def new_get(*args, **kwargs):
+def new_get(*args: Any, **kwargs: Any) -> Any:
     """Wrap calls to requests.get() with injection of a timeout."""
     kwargs["timeout"] = 2
     return old_get(*args, **kwargs)
