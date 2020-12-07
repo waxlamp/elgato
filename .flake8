@@ -4,6 +4,7 @@
 max-line-length = 88
 exclude =
     __pycache__,
+    .eggs,
     build,
     scripts,
     docs
