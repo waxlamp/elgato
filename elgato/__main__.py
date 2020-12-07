@@ -5,7 +5,22 @@ import json
 import leglight
 import os
 import sys
-from typing import List, Literal, Optional, TypedDict
+from typing import Any, List, Literal, Optional, TypedDict
+
+
+# Monkeypatch requests to provide a timeout for all GET requests.
+import requests
+
+old_get = requests.get
+
+
+def new_get(*args: Any, **kwargs: Any) -> Any:
+    """Wrap calls to requests.get() with injection of a timeout."""
+    kwargs["timeout"] = 2
+    return old_get(*args, **kwargs)
+
+
+requests.get = new_get
 
 
 class DiscoveredLight(TypedDict):
@@ -28,16 +43,35 @@ class Discovered:
     """Active record class for retrieving/saving light list."""
 
     path: str
-    lights: List[leglight.LegLight]
+    lights: List[leglight.LegLight] = []
 
     def __init__(self, path: str) -> None:
         """Initialize with a path to a JSON file."""
         self.path = path
-        with open(path) as f:
+
+    def hydrate(self) -> None:
+        """Hydrate with light data from the config file."""
+        with open(self.path) as f:
             lights: List[DiscoveredLight] = json.loads(f.read())
-            self.lights = [
-                leglight.LegLight(light["address"], light["port"]) for light in lights
-            ]
+            ok = True
+            for (i, light) in enumerate(lights):
+                try:
+                    self.lights.append(
+                        leglight.LegLight(light["address"], light["port"])
+                    )
+                except requests.exceptions.Timeout:
+                    print(
+                        f"Light {i} ({light['address']}:{light['port']}) "
+                        "could not be found",
+                        file=sys.stderr,
+                    )
+                    ok = False
+
+            if not ok:
+                print(
+                    "You may want to run light discovery again "
+                    "(`elgato lights --discover`)"
+                )
 
     def refresh(self) -> None:
         """Discover the lights on the network."""
@@ -112,6 +146,8 @@ def lights(discover: bool) -> int:
     """Discover the lights on the network, and display them."""
     if discover:
         discovered.refresh()
+    else:
+        discovered.hydrate()
 
     for index in range(len(discovered.lights)):
         print(f"Light {index}")
@@ -122,6 +158,7 @@ def lights(discover: bool) -> int:
 
 def turn_on(which: int) -> int:
     """Turn on the requested light."""
+    discovered.hydrate()
     light = discovered.get_light(which)
     light.on()
     return 0
@@ -129,6 +166,7 @@ def turn_on(which: int) -> int:
 
 def turn_off(which: int) -> int:
     """Turn off the requested light."""
+    discovered.hydrate()
     light = discovered.get_light(which)
     light.off()
     return 0
@@ -136,6 +174,7 @@ def turn_off(which: int) -> int:
 
 def toggle(which: int) -> int:
     """Toggle the requested light."""
+    discovered.hydrate()
     light = discovered.get_light(which)
     return turn_on(which) if light.isOn == 0 else turn_off(which)
 
@@ -144,6 +183,7 @@ def set_color(
     which: int, level: Optional[int], warmer: Optional[int], cooler: Optional[int]
 ) -> int:
     """Set the first light's color temperature."""
+    discovered.hydrate()
     light = discovered.get_light(which)
 
     delta: Optional[int] = None
@@ -173,6 +213,7 @@ def set_brightness(
     which: int, level: Optional[int], brighter: Optional[int], dimmer: Optional[int]
 ) -> int:
     """Set the first light's brightness."""
+    discovered.hydrate()
     light = discovered.get_light(which)
 
     delta: Optional[int] = None
