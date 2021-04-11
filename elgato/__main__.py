@@ -191,9 +191,9 @@ def set_color(
     if level is not None:
         light.color(level)
     elif warmer is not None:
-        delta = 500 if warmer < 0 else warmer
+        delta = -500 if warmer < 0 else -warmer
     elif cooler is not None:
-        delta = -500 if cooler < 0 else -cooler
+        delta = 500 if cooler < 0 else cooler
     else:
         print(int(light.isTemperature))
 
