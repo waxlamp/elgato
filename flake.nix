@@ -53,6 +53,14 @@
       ];
     };
 
+    overlay = final: prev: {
+      python = prev.python.override {
+        packageOverrides = p-final: p-prev: {
+          inherit leglight elgato;
+        };
+      };
+    };
+
     defaultPackage.x86_64-linux = elgato;
   };
 }
