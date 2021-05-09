@@ -23,15 +23,8 @@
 
       doCheck = false;
     };
-  in {
-    pipenvDevShell = pkgs.mkShell {
-      buildInputs = with pkgs; [
-        python38
-        pipenv
-      ];
-    };
 
-    defaultPackage.x86_64-linux = pkgs.python38Packages.buildPythonPackage rec {
+    elgato = pkgs.python38Packages.buildPythonPackage rec {
       pname = "PyElgato";
       version = "1.2.0";
 
@@ -51,5 +44,15 @@
 
       doCheck = false;
     };
+
+  in {
+    pipenvDevShell = pkgs.mkShell {
+      buildInputs = with pkgs; [
+        python38
+        pipenv
+      ];
+    };
+
+    defaultPackage.x86_64-linux = elgato;
   };
 }
