@@ -2,8 +2,9 @@
   description = "Python package for controlling an ElGato key light";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs";
+  inputs.flake-utils.url = "github:numtide/flake-utils";
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, flake-utils }:
   let
     pkgs = nixpkgs.legacyPackages.x86_64-linux;
 
@@ -45,6 +46,11 @@
       doCheck = false;
     };
 
+    elgatoApp = flake-utils.lib.mkApp {
+      drv = elgato;
+      exePath = "/bin/elgato";
+    };
+
   in {
     pipenvDevShell = pkgs.mkShell {
       buildInputs = with pkgs; [
@@ -62,5 +68,9 @@
     };
 
     defaultPackage.x86_64-linux = elgato;
+
+    apps.x86_64-linux.elgato = elgatoApp;
+
+    defaultApp.x86_64-linux = elgatoApp;
   };
 }
